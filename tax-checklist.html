@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="税理士資料">
+<title>税理士資料チェック</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Hiragino Sans','Noto Sans JP',sans-serif;background:#fdf6f4;color:#3d2420;font-size:14px;max-width:430px;margin:0 auto;min-height:100vh;}
+button{font-family:inherit;cursor:pointer;}
+input,textarea{font-family:inherit;}
+
+/* Hero */
+#hero{background:linear-gradient(160deg,#d4897a 0%,#c07060 50%,#a85a50 100%);padding:52px 16px 14px;position:sticky;top:0;z-index:10;}
+#hero-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+#app-title{font-size:17px;font-weight:700;color:#fff;letter-spacing:-0.3px;}
+#hero-btns{display:flex;gap:6px;}
+.btn-danger{background:rgba(0,0,0,0.2);color:#ffe0dc;border:none;border-radius:8px;padding:6px 10px;font-size:14px;}
+.btn-add{background:rgba(255,255,255,0.25);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;}
+
+/* Month tabs */
+#month-tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:10px;padding-bottom:2px;}
+#month-tabs::-webkit-scrollbar{display:none;}
+.month-tab{background:rgba(255,255,255,0.2);color:rgba(255,255,255,0.8);border:none;border-radius:20px;padding:4px 14px;font-size:12px;white-space:nowrap;flex-shrink:0;}
+.month-tab.active{background:#fff;color:#c0796a;font-weight:700;}
+
+/* Quick strip */
+#quick-strip{background:rgba(255,255,255,0.18);border-radius:12px;padding:8px 12px;margin-bottom:10px;display:flex;flex-direction:column;gap:6px;}
+.quick-item{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.quick-label{font-size:11px;color:rgba(255,255,255,0.85);font-weight:600;white-space:nowrap;width:72px;flex-shrink:0;}
+.quick-input{background:rgba(255,255,255,0.3);border:none;border-radius:6px;padding:4px 8px;color:#fff;font-size:12px;flex:1;min-width:0;outline:none;}
+.quick-input::placeholder{color:rgba(255,255,255,0.6);}
+.quick-date-val{font-size:12px;color:#fff;font-weight:600;}
+.quick-divider{height:1px;background:rgba(255,255,255,0.2);}
+
+/* Progress */
+#progress-wrap{background:rgba(255,255,255,0.18);border-radius:12px;padding:8px 12px;}
+#progress-top{display:flex;justify-content:space-between;margin-bottom:5px;}
+#progress-text{font-size:12px;color:rgba(255,255,255,0.9);}
+#progress-pct{font-size:14px;font-weight:700;color:#fff;}
+#progress-bg{height:7px;background:rgba(255,255,255,0.25);border-radius:4px;overflow:hidden;margin-bottom:7px;}
+#progress-fill{height:100%;background:#fff;border-radius:4px;transition:width 0.3s ease;}
+#progress-sub{display:flex;gap:6px;flex-wrap:wrap;}
+.chip{background:rgba(255,255,255,0.2);color:#fff;border-radius:20px;padding:2px 10px;font-size:11px;font-weight:600;}
+
+/* Nav tabs */
+#nav-tabs{display:flex;background:#fff;border-bottom:1px solid #f0dbd7;box-shadow:0 1px 4px rgba(180,100,80,0.06);}
+.nav-tab{flex:1;padding:10px 4px;background:none;border:none;color:#a08580;font-size:11px;border-bottom:2px solid transparent;}
+.nav-tab.active{color:#c0796a;border-bottom:2px solid #c0796a;font-weight:700;}
+
+/* Content */
+#content{padding:10px 12px 60px;}
+
+/* Checklist */
+.group-block{margin-bottom:10px;}
+.group-header{display:flex;justify-content:space-between;align-items:center;padding:5px 10px;background:#fff;border-radius:8px 8px 0 0;border-left:4px solid #ccc;}
+.group-header-left{display:flex;align-items:center;gap:5px;}
+.group-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.group-name{font-size:12px;font-weight:700;}
+.done-badge{background:#e6f7ee;color:#2d7a4f;font-size:9px;font-weight:700;border-radius:10px;padding:1px 6px;border:1px solid #a8d8bc;}
+.group-count{font-size:10px;color:#a08580;}
+.doc-row{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:#fff;border-bottom:1px solid #f0dbd7;gap:6px;}
+.doc-row.done{opacity:0.45;}
+.doc-name{flex:1;font-size:12px;color:#3d2420;line-height:1.3;}
+.doc-checks{display:flex;gap:4px;flex-shrink:0;}
+.check-btn{background:#f5ede9;color:#a08580;border:1px solid #f0dbd7;border-radius:6px;padding:3px 7px;font-size:10px;white-space:nowrap;}
+.check-btn.ready{background:#e6f7ee;color:#2d7a4f;border:1px solid #a8d8bc;}
+.check-btn.handed{background:#fde8e4;color:#c0796a;border:1px solid #e8a89e;}
+
+/* Info */
+#info-area{display:flex;flex-direction:column;gap:10px;}
+.card{background:#fff;border-radius:12px;padding:14px;border:1px solid #f0dbd7;box-shadow:0 1px 4px rgba(180,100,80,0.05);}
+.card-label{display:block;font-size:11px;color:#a08580;margin-bottom:7px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;}
+.card-input{width:100%;background:#fdf6f4;border:1px solid #f0dbd7;border-radius:8px;padding:8px 10px;color:#3d2420;font-size:14px;outline:none;}
+.date-hint{margin-top:6px;font-size:13px;color:#c0796a;font-weight:600;}
+.card-ta{width:100%;background:#fdf6f4;border:1px solid #f0dbd7;border-radius:8px;padding:8px 10px;color:#3d2420;font-size:13px;resize:none;outline:none;line-height:1.6;}
+.summary-card{background:#fde8e4;border-radius:12px;padding:14px;border:1px solid #e8a89e;}
+.summary-title{font-size:13px;font-weight:700;color:#c0796a;margin-bottom:10px;}
+.summary-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(192,121,106,0.15);font-size:13px;}
+.summary-key{color:#a08580;}
+.summary-val{color:#c0796a;font-weight:600;}
+
+/* Docs management */
+#docs-area h3{font-size:14px;font-weight:700;color:#3d2420;margin-bottom:12px;}
+.add-group-row{display:flex;gap:6px;margin-bottom:16px;}
+.group-manage-block{background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:12px;border:1px solid #f0dbd7;}
+.group-manage-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.group-manage-name{font-size:13px;font-weight:700;}
+.remove-group-btn{background:#fde8e4;color:#c05050;border:1px solid #e8b0a8;border-radius:6px;padding:4px 10px;font-size:11px;}
+.doc-manage-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0dbd7;}
+.doc-manage-name{font-size:13px;color:#3d2420;}
+.remove-btn{background:#fde8e4;color:#c05050;border:1px solid #e8b0a8;border-radius:6px;padding:4px 10px;font-size:11px;}
+.add-doc-in-group{display:flex;gap:6px;margin-top:10px;}
+.add-input{flex:1;background:#fdf6f4;border:1px solid #f0dbd7;border-radius:8px;padding:8px 10px;color:#3d2420;font-size:13px;outline:none;}
+.add-ok{background:#c0796a;color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;}
+.docs-tip{margin-top:14px;font-size:11px;color:#a08580;text-align:center;}
+
+/* Dialog */
+#overlay{position:fixed;inset:0;background:rgba(60,20,10,0.45);display:flex;align-items:center;justify-content:center;z-index:100;display:none;}
+#overlay.show{display:flex;}
+#dialog{background:#fff;border-radius:18px;padding:24px 20px;width:80%;max-width:320px;border:1px solid #f0dbd7;box-shadow:0 8px 32px rgba(180,80,60,0.18);}
+#dialog-title{font-size:16px;font-weight:700;color:#3d2420;margin-bottom:8px;}
+#dialog-msg{font-size:13px;color:#a08580;margin-bottom:20px;line-height:1.6;}
+#dialog-btns{display:flex;gap:10px;}
+#dialog-cancel{flex:1;background:#f5ede9;color:#a08580;border:none;border-radius:10px;padding:12px;font-size:14px;}
+#dialog-confirm{flex:1;background:#c05050;color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;}
+
+.hidden{display:none!important;}
+</style>
+</head>
+<body>
+
+<!-- Delete dialog -->
+<div id="overlay">
+  <div id="dialog">
+    <div id="dialog-title">この月を削除しますか？</div>
+    <div id="dialog-msg"></div>
+    <div id="dialog-btns">
+      <button id="dialog-cancel">キャンセル</button>
+      <button id="dialog-confirm">削除する</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hero -->
+<div id="hero">
+  <div id="hero-top">
+    <span id="app-title">📋 税理士資料チェック</span>
+    <div id="hero-btns">
+      <button class="btn-danger" onclick="askDelete()">🗑</button>
+      <button class="btn-add" onclick="addMonth()">＋ 来月</button>
+    </div>
+  </div>
+  <div id="month-tabs"></div>
+  <div id="quick-strip">
+    <div class="quick-item">
+      <span class="quick-label">📅 次回予定</span>
+      <input type="date" class="quick-input" id="q-next" onchange="updateField('nextDate',this.value)">
+      <span class="quick-date-val" id="q-next-val"></span>
+    </div>
+    <div class="quick-divider"></div>
+    <div class="quick-item">
+      <span class="quick-label">⭐ 特別メモ</span>
+      <input type="text" class="quick-input" id="q-special" placeholder="例：決算書類など" oninput="updateField('specialNote',this.value)">
+    </div>
+  </div>
+  <div id="progress-wrap">
+    <div id="progress-top">
+      <span id="progress-text">渡し済 0/0</span>
+      <span id="progress-pct">0%</span>
+    </div>
+    <div id="progress-bg"><div id="progress-fill" style="width:0%"></div></div>
+    <div id="progress-sub"></div>
+  </div>
+</div>
+
+<!-- Nav -->
+<div id="nav-tabs">
+  <button class="nav-tab active" onclick="switchView('checklist',this)">✅ 書類チェック</button>
+  <button class="nav-tab" onclick="switchView('info',this)">📝 日程・メモ</button>
+  <button class="nav-tab" onclick="switchView('docs',this)">📁 グループ管理</button>
+</div>
+
+<!-- Content -->
+<div id="content">
+  <div id="view-checklist"></div>
+  <div id="view-info" class="hidden">
+    <div id="info-area">
+      <div class="card">
+        <label class="card-label">📦 資料用意期限</label>
+        <input type="date" class="card-input" id="f-deadline" onchange="updateField('deadlineDate',this.value)">
+      </div>
+      <div class="card">
+        <label class="card-label">📤 資料を渡した日</label>
+        <input type="date" class="card-input" id="f-handed" onchange="updateField('handedDate',this.value)">
+      </div>
+      <div class="card">
+        <label class="card-label">📅 次回打ち合わせ予定日</label>
+        <input type="date" class="card-input" id="f-next" onchange="updateField('nextDate',this.value)">
+        <div class="date-hint" id="f-next-hint"></div>
+      </div>
+      <div class="card">
+        <label class="card-label">⭐ 次回までに特別用意するもの</label>
+        <textarea class="card-ta" id="f-special" rows="3" placeholder="例：決算書類、新規契約書 など" oninput="updateField('specialNote',this.value)"></textarea>
+      </div>
+      <div class="card">
+        <label class="card-label">📝 メモ</label>
+        <textarea class="card-ta" id="f-memo" rows="4" placeholder="何でも自由に..." oninput="updateField('memo',this.value)"></textarea>
+      </div>
+      <div class="summary-card" id="summary-card"></div>
+    </div>
+  </div>
+  <div id="view-docs" class="hidden">
+    <div id="docs-area">
+      <h3>グループ・書類管理</h3>
+      <div class="add-group-row">
+        <input type="text" class="add-input" id="new-group-input" placeholder="新しいグループ名">
+        <button class="add-ok" onclick="addGroup()">追加</button>
+      </div>
+      <div id="group-manage-list"></div>
+      <div class="docs-tip">※ 変更はこの月のみに反映されます</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const DEFAULT_GROUPS = [
+  { name:"横浜分", color:"#c0796a", docs:["売上台帳・請求書控え","入金確認書類（通帳コピー等）","経費領収書","銀行通帳（全口座）","クレジットカード明細"] },
+  { name:"藤沢分", color:"#7a7abf", docs:["売上台帳・請求書控え","入金確認書類（通帳コピー等）","経費領収書","銀行通帳（全口座）","クレジットカード明細"] },
+  { name:"共通",  color:"#5a9a6a", docs:["給与明細・賃金台帳","源泉徴収納付書控え","社会保険料納付書","固定資産台帳","契約書・覚書（新規）"] },
+];
+const COLORS = ["#c0796a","#7a7abf","#5a9a6a","#c09a40","#a060a0","#4a9ab0"];
+
+function getMonthLabel(offset=0){
+  const d=new Date(); d.setMonth(d.getMonth()+offset);
+  return `${d.getFullYear()}年${d.getMonth()+1}月`;
+}
+function formatDate(s){
+  if(!s) return "未設定";
+  const d=new Date(s);
+  return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,"0")}/${String(d.getDate()).padStart(2,"0")}`;
+}
+function makeMonthDocs(groups){
+  return groups.map(g=>({ groupName:g.name, color:g.color, docs:g.docs.map(name=>({name,ready:false,handed:false})) }));
+}
+function initMonth(monthKey, groups){
+  return { monthKey, groups:makeMonthDocs(groups), deadlineDate:"", handedDate:"", nextDate:"", specialNote:"", memo:"" };
+}
+
+let allMonths, currentIdx=0, currentView="checklist";
+try { allMonths = JSON.parse(localStorage.getItem("taxChecklist_v4")) || null; } catch{}
+if(!allMonths) allMonths = [initMonth(getMonthLabel(0), DEFAULT_GROUPS)];
+
+function save(){ try{ localStorage.setItem("taxChecklist_v4", JSON.stringify(allMonths)); }catch{} }
+function cur(){ return allMonths[currentIdx]; }
+
+function updateField(field, val){
+  cur()[field] = val;
+  save();
+  renderAll();
+}
+
+function switchView(v, btn){
+  currentView = v;
+  document.querySelectorAll(".nav-tab").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  ["checklist","info","docs"].forEach(k=>{
+    document.getElementById("view-"+k).classList.toggle("hidden", k!==v);
+  });
+  renderView();
+}
+
+function addMonth(){
+  const last = allMonths[allMonths.length-1];
+  const ld = new Date(last.monthKey.replace("年","-").replace("月",""));
+  ld.setMonth(ld.getMonth()+1);
+  const newKey = `${ld.getFullYear()}年${ld.getMonth()+1}月`;
+  if(allMonths.find(m=>m.monthKey===newKey)) return;
+  const tpl = last.groups.map(g=>({ name:g.groupName, color:g.color, docs:g.docs.map(d=>d.name) }));
+  allMonths.push(initMonth(newKey, tpl));
+  currentIdx = allMonths.length-1;
+  save(); renderAll();
+}
+
+function askDelete(){
+  document.getElementById("dialog-msg").textContent = `「${cur().monthKey}」のデータをすべて削除します。`;
+  document.getElementById("overlay").classList.add("show");
+}
+document.getElementById("dialog-cancel").onclick = ()=> document.getElementById("overlay").classList.remove("show");
+document.getElementById("dialog-confirm").onclick = ()=>{
+  document.getElementById("overlay").classList.remove("show");
+  allMonths.splice(currentIdx,1);
+  if(allMonths.length===0) allMonths=[initMonth(getMonthLabel(0), DEFAULT_GROUPS)];
+  currentIdx = Math.max(0, currentIdx-1);
+  save(); renderAll();
+};
+
+function toggleDoc(gi, di, field){
+  cur().groups[gi].docs[di][field] = !cur().groups[gi].docs[di][field];
+  save(); renderChecklist(); renderProgress();
+}
+
+function addGroup(){
+  const name = document.getElementById("new-group-input").value.trim();
+  if(!name) return;
+  const color = COLORS[cur().groups.length % COLORS.length];
+  cur().groups.push({ groupName:name, color, docs:[] });
+  document.getElementById("new-group-input").value = "";
+  save(); renderView();
+}
+
+function removeGroup(gi){
+  cur().groups.splice(gi,1);
+  save(); renderView();
+}
+
+function addDocToGroup(gi){
+  const inp = document.getElementById(`new-doc-${gi}`);
+  const name = inp.value.trim();
+  if(!name) return;
+  cur().groups[gi].docs.push({ name, ready:false, handed:false });
+  inp.value = "";
+  save(); renderView();
+}
+
+function removeDoc(gi, di){
+  cur().groups[gi].docs.splice(di,1);
+  save(); renderView();
+}
+
+function renderMonthTabs(){
+  const el = document.getElementById("month-tabs");
+  el.innerHTML = allMonths.map((m,i)=>
+    `<button class="month-tab ${i===currentIdx?'active':''}" onclick="selectMonth(${i})">${m.monthKey}</button>`
+  ).join("");
+}
+
+function selectMonth(i){
+  currentIdx = i;
+  renderAll();
+}
+
+function renderProgress(){
+  const m = cur();
+  const allDocs = m.groups.flatMap(g=>g.docs);
+  const total = allDocs.length;
+  const handed = allDocs.filter(d=>d.handed).length;
+  const ready = allDocs.filter(d=>d.ready).length;
+  const pct = total ? Math.round(handed/total*100) : 0;
+  document.getElementById("progress-text").textContent = `渡し済 ${handed}/${total}`;
+  document.getElementById("progress-pct").textContent = `${pct}%`;
+  document.getElementById("progress-fill").style.width = pct+"%";
+  document.getElementById("progress-sub").innerHTML = m.groups.map(g=>{
+    const gt=g.docs.length, gh=g.docs.filter(d=>d.handed).length;
+    return `<span class="chip" style="border-left:3px solid ${g.color}">${g.groupName} ${gh}/${gt}</span>`;
+  }).join("");
+}
+
+function renderQuick(){
+  const m = cur();
+  document.getElementById("q-next").value = m.nextDate||"";
+  document.getElementById("q-next-val").textContent = m.nextDate ? formatDate(m.nextDate) : "";
+  document.getElementById("q-special").value = m.specialNote||"";
+}
+
+function renderChecklist(){
+  const m = cur();
+  document.getElementById("view-checklist").innerHTML = m.groups.map((g,gi)=>{
+    const gt=g.docs.length, gr=g.docs.filter(d=>d.ready).length, gh=g.docs.filter(d=>d.handed).length;
+    const allDone = gt>0 && gh===gt;
+    return `
+      <div class="group-block">
+        <div class="group-header" style="border-left:4px solid ${g.color}">
+          <div class="group-header-left">
+            <span class="group-dot" style="background:${g.color}"></span>
+            <span class="group-name" style="color:${g.color}">${g.groupName}</span>
+            ${allDone?'<span class="done-badge">✓ 完了</span>':''}
+          </div>
+          <span class="group-count">${gh}/${gt} 渡済</span>
+        </div>
+        ${g.docs.map((d,di)=>`
+          <div class="doc-row ${d.handed?'done':''}">
+            <span class="doc-name">${d.name}</span>
+            <div class="doc-checks">
+              <button class="check-btn ${d.ready?'ready':''}" onclick="toggleDoc(${gi},${di},'ready')">${d.ready?'✓':'○'} 準備</button>
+              <button class="check-btn ${d.handed?'handed':''}" onclick="toggleDoc(${gi},${di},'handed')">${d.handed?'✓':'○'} 渡した</button>
+            </div>
+          </div>`).join("")}
+      </div>`;
+  }).join("");
+}
+
+function renderInfo(){
+  const m = cur();
+  document.getElementById("f-deadline").value = m.deadlineDate||"";
+  document.getElementById("f-handed").value = m.handedDate||"";
+  document.getElementById("f-next").value = m.nextDate||"";
+  document.getElementById("f-next-hint").textContent = m.nextDate ? "→ "+formatDate(m.nextDate) : "";
+  document.getElementById("f-special").value = m.specialNote||"";
+  document.getElementById("f-memo").value = m.memo||"";
+  const rows = [["用意期限",formatDate(m.deadlineDate)],["渡した日",formatDate(m.handedDate)],["次回予定",formatDate(m.nextDate)]];
+  const groupRows = m.groups.map(g=>{
+    const gt=g.docs.length, gh=g.docs.filter(d=>d.handed).length, gr=g.docs.filter(d=>d.ready).length;
+    return `<div class="summary-row"><span class="summary-key" style="color:${g.color}">■ ${g.groupName}</span><span class="summary-val">準備${gr}/${gt} 渡${gh}/${gt}</span></div>`;
+  }).join("");
+  document.getElementById("summary-card").innerHTML =
+    `<div class="summary-title">📊 今月サマリー</div>` +
+    rows.map(([k,v])=>`<div class="summary-row"><span class="summary-key">${k}</span><span class="summary-val">${v}</span></div>`).join("") +
+    groupRows;
+}
+
+function renderDocs(){
+  const m = cur();
+  document.getElementById("group-manage-list").innerHTML = m.groups.map((g,gi)=>`
+    <div class="group-manage-block" style="border-left:4px solid ${g.color}">
+      <div class="group-manage-header">
+        <span class="group-manage-name" style="color:${g.color}">■ ${g.groupName}</span>
+        <button class="remove-group-btn" onclick="removeGroup(${gi})">グループ削除</button>
+      </div>
+      ${g.docs.map((d,di)=>`
+        <div class="doc-manage-row">
+          <span class="doc-manage-name">${d.name}</span>
+          <button class="remove-btn" onclick="removeDoc(${gi},${di})">削除</button>
+        </div>`).join("")}
+      <div class="add-doc-in-group">
+        <input type="text" class="add-input" id="new-doc-${gi}" placeholder="書類を追加..."
+          onkeydown="if(event.key==='Enter') addDocToGroup(${gi})">
+        <button class="add-ok" onclick="addDocToGroup(${gi})">＋</button>
+      </div>
+    </div>`).join("");
+}
+
+function renderView(){
+  if(currentView==="checklist") renderChecklist();
+  else if(currentView==="info") renderInfo();
+  else if(currentView==="docs") renderDocs();
+}
+
+function renderAll(){
+  renderMonthTabs();
+  renderQuick();
+  renderProgress();
+  renderView();
+}
+
+renderAll();
+</script>
+</body>
+</html>
